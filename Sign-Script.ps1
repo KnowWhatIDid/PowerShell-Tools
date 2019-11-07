@@ -9,36 +9,14 @@
 .OUTPUTS
     None
 .NOTES
-    VERSION 4.0
-        Modified Date: 2019-07-11
-        Author: John Trask
-        Modifications:
-            -Finds the code-signing certificate that includes a private key.
-
-    VERSION 3.1
-        Modified Date: 2019-05-07
-        Author: John Trask
-        Modifications:
-            -Changed timestamp server URL was changed to http://certum.pl.
-            -The "Process complete" message was removed.
-    VERSION 3.0 
-        Modified Date: 2018-09-18
-        Author: John Trask
-        Modifications:
-            -Will only sign a single .ps1 file.
-
-    VERSION 2.0
-        Modified Date: ??
-        Author: John Trask
-        Modifications:
-            -Simplified the command line.
-
-    VERSION 1.0
-        Creation Date: ??
+    VERSION 1.0.0
+        Creation Date: 2019-11-07
         Author: John Trask
         Initial Release 
 .EXAMPLE
     .\Sign-Script -Path C:\Scripts\New-Bananagram.ps1
+.EXAMPLE
+    .\Sign-Script -Path C:\Scripts\New-Bananagram.ps1 -External
 #>
 
 [CmdletBinding()]
@@ -63,15 +41,6 @@ Function Sign-Script {
     )
 
     Begin {
-                
-        ## Re-call this script via Start-Process IF the script is not being run as administrator AND the -AsAdmin switch was passed.
-        If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
-            { 
-                $RerunArgs = "& '" + $MyInvocation.MyCommand.Definition + "'"
-                $RerunArgs = "'" + $MyInvocation.Line + "'"
-                Start-Process powershell.exe -Verb RunAs -ArgumentList $RerunArgs
-                Exit 
-            }
     }
     Process {
         $samAccountName = $env:USERNAME    
@@ -79,8 +48,7 @@ Function Sign-Script {
         If ($External) {
             $CertOwner = 'Hunt Consolidated, Inc.'
             $SearchFilter = "CN=`"$CertOwner*"
-        }
-        Else {
+        } Else {
             $CertOwner = $UserName
             $SearchFilter = "CN=$UserName*"
         }
@@ -88,8 +56,7 @@ Function Sign-Script {
         $Cert = (Get-ChildItem Cert:\CurrentUser\My -CodeSigningCert | Where-Object {((Get-Date) -le $_.NotAfter) -and ((Get-Date) -ge $_.NotBefore) -and ($_.Subject -like $SearchFilter)})
         If ($Cert.Count -ne 1) {
             Write-Error "There was a problem retrieving the code signing certificate for $CertOwner"
-        }
-        Else {
+        } Else {
             Write-Verbose "Signing $Path with $($Cert.Subject)"
             Set-AuthenticodeSignature $Path $Cert -TimestampServer http://time.certum.pl
         }
