@@ -2,7 +2,7 @@
 .SYNOPSIS
     Signs PowerShell scripts.
 .DESCRIPTION
-    Queries the user's personal certificate store to find the code-signing certificate.
+    Queries the user's personal certificate store to find a code-signing certificate.
     If $CertOwner is passed, it will look for a valid code signing certificate issued to 
     the cert owner.  Otherwise, it will look for a valid code signing certificate issued to
     the AD user executing the script.
